@@ -1,16 +1,70 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react'
+import axios from '../../axios'
+import { imageURL } from '../../Constants/Constants'
 import "./RowPost.css"
-function RowPost() {
+import Youtube from 'react-youtube'
+import movieTrailer from 'movie-trailer';
+
+function RowPost(props) {
+
+    const [movies, setMovies] = useState([]);
+    const [trailerUrl, setTrailerUrl] = useState('')
+
+    useEffect(() => {
+        axios.get(props.url)
+            .then((response) => {
+                console.log(response.data.results);
+                setMovies(response.data.results)
+            })
+            .catch(err => {
+                // alert(err)
+            })
+    }, [])
+
+    const opts = {
+        height: '390',
+        width: '100%',
+        playerVars: {
+            // https://developers.google.com/youtube/player_parameters
+            autoplay: 1,
+        },
+    };
+
+    const handleClick = (movie) => {
+        if (trailerUrl) {
+            setTrailerUrl('');
+        } else {
+            movieTrailer(movie?.title || "")
+                .then((url) => {
+                    console.log(url);
+
+                    const urlParams = new URLSearchParams(new URL(url).search)
+                    setTrailerUrl(urlParams.get("v"));
+                })
+                .catch(err => console.log(err))
+        }
+    }
+
+    let poster;
+
+    if (props.class === "posters__poster") {
+        poster = true;
+    }
+    if (props.class === "posters__smallPoster") {
+        poster = false;
+    }
+
     return (
         <div className="row">
-            <h2>Title</h2>
-            <div className="posters">
-                <img className="poster" src="https://images.squarespace-cdn.com/content/v1/59232e19579fb3fa44a693c2/1589212826160-UM9PEPGOS3OJPR0FJ81X/ke17ZwdGBToddI8pDm48kHZUaJeKzodyg_sXWBMxNTdZw-zPPgdn4jUwVcJE1ZvWQUxwkmyExglNqGp0IvTJZUJFbgE-7XRK3dMEBRBhUpxCBUU7B-_SAG1kGvCwYgmUjQXvn8_OJjtz3K1llMQBa1MPsuSXPSY3X-tgg78M7lI/SKOyqL1qFLIhbK6ho2lB-696x975.jpg?format=1500w" alt="psoters"/>
-                <img className="poster" src="https://images.squarespace-cdn.com/content/v1/59232e19579fb3fa44a693c2/1589212826160-UM9PEPGOS3OJPR0FJ81X/ke17ZwdGBToddI8pDm48kHZUaJeKzodyg_sXWBMxNTdZw-zPPgdn4jUwVcJE1ZvWQUxwkmyExglNqGp0IvTJZUJFbgE-7XRK3dMEBRBhUpxCBUU7B-_SAG1kGvCwYgmUjQXvn8_OJjtz3K1llMQBa1MPsuSXPSY3X-tgg78M7lI/SKOyqL1qFLIhbK6ho2lB-696x975.jpg?format=1500w" alt="psoters"/>
-                <img className="poster" src="https://images.squarespace-cdn.com/content/v1/59232e19579fb3fa44a693c2/1589212826160-UM9PEPGOS3OJPR0FJ81X/ke17ZwdGBToddI8pDm48kHZUaJeKzodyg_sXWBMxNTdZw-zPPgdn4jUwVcJE1ZvWQUxwkmyExglNqGp0IvTJZUJFbgE-7XRK3dMEBRBhUpxCBUU7B-_SAG1kGvCwYgmUjQXvn8_OJjtz3K1llMQBa1MPsuSXPSY3X-tgg78M7lI/SKOyqL1qFLIhbK6ho2lB-696x975.jpg?format=1500w" alt="psoters"/>
-
-                <img className="poster" src="https://images.squarespace-cdn.com/content/v1/59232e19579fb3fa44a693c2/1589212826160-UM9PEPGOS3OJPR0FJ81X/ke17ZwdGBToddI8pDm48kHZUaJeKzodyg_sXWBMxNTdZw-zPPgdn4jUwVcJE1ZvWQUxwkmyExglNqGp0IvTJZUJFbgE-7XRK3dMEBRBhUpxCBUU7B-_SAG1kGvCwYgmUjQXvn8_OJjtz3K1llMQBa1MPsuSXPSY3X-tgg78M7lI/SKOyqL1qFLIhbK6ho2lB-696x975.jpg?format=1500w" alt="psoters"/>
+            <h2>{props.title}</h2>
+            <div className="posters container">
+                {movies.map(obj =>{
+                   return <> <img onClick={() => handleClick(obj)} className={props.class} src={poster ? `${imageURL + obj.poster_path}` : `${imageURL + obj.backdrop_path}`} alt={obj.title} />
+                    
+                </>})}
+               
             </div>
+            { trailerUrl && <Youtube videoId={trailerUrl} opts={opts} />}
         </div>
     )
 }
